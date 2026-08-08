@@ -1,0 +1,39 @@
+[api]
+enabled = true
+address = "0.0.0.0:8686"
+
+[sources.docker_logs]
+type = "docker_logs"
+docker_host = "unix:///var/run/docker.sock"
+auto_partial_merge = true
+
+[transforms.enrich_docker_logs]
+type = "remap"
+inputs = ["docker_logs"]
+source = '''
+.timestamp = now()
+
+if exists(.container_name) {
+  .container = .container_name
+}
+
+if exists(.label."com.docker.compose.project") {
+  .compose_project = .label."com.docker.compose.project"
+}
+
+if exists(.label."com.docker.compose.service") {
+  .compose_service = .label."com.docker.compose.service"
+}
+
+del(.label)
+'''
+
+[sinks.opensearch]
+type = "elasticsearch"
+inputs = ["enrich_docker_logs"]
+endpoints = ["http://opensearch:9200"]
+api_version = "v7"
+compression = "gzip"
+
+[sinks.opensearch.bulk]
+index = "docker-logs-%Y.%m.%d"
