@@ -44,6 +44,18 @@ services:
       - opensearch
     restart: unless-stopped
 
+  setup:
+    image: curlimages/curl:latest
+    command:
+      - sh
+      - /setup-opensearch.sh
+    volumes:
+      - ./setup-opensearch.sh:/setup-opensearch.sh:ro
+    depends_on:
+      - opensearch
+      - dashboards
+    restart: "no"
+
 volumes:
   opensearch-data:
   vector-data:

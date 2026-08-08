@@ -5,6 +5,9 @@ Local Docker logging stack using OpenSearch, OpenSearch Dashboards, and Vector.
 Vector reads logs from the local Docker daemon, enriches them with Docker/Compose
 metadata, and writes them into daily OpenSearch indices.
 
+The Compose stack also runs a one-shot setup container that installs the
+OpenSearch index template and creates the `docker-logs-*` Dashboards data view.
+
 This setup is intended for local development only. OpenSearch security is
 disabled.
 
@@ -26,7 +29,12 @@ disabled.
 docker compose up -d
 ```
 
-OpenSearch can take a minute or two to become ready on first start.
+OpenSearch can take a minute or two to become ready on first start. The `setup`
+service waits for OpenSearch and Dashboards, then creates:
+
+- an index template for `docker-logs-*`
+- the `docker-logs-*` Dashboards data view
+- a `timestamp` time field for the data view
 
 ## Check Logs Are Arriving
 
@@ -40,19 +48,13 @@ You should see an index like:
 docker-logs-2026.08.08
 ```
 
-## Create A Data View
+## Open Logs
 
-Open <http://localhost:5601>, then create an index pattern/data view for:
+Open <http://localhost:5601>, then go to Discover and select:
 
 ```text
 docker-logs-*
 ```
-
-Use `timestamp` as the time field.
-
-If `timestamp` is not offered, wait until documents have been indexed and try
-again. Dashboards can only offer fields that exist in the current OpenSearch
-mapping.
 
 ## Useful Fields
 
@@ -101,6 +103,7 @@ Check service logs:
 docker compose logs --tail=100 opensearch
 docker compose logs --tail=100 dashboards
 docker compose logs --tail=100 vector
+docker compose logs setup
 ```
 
 If Dashboards says the server is not ready yet, first check that OpenSearch is
@@ -110,6 +113,11 @@ running:
 curl http://localhost:9200
 ```
 
-For a single-node setup, `docker-logs-*` indices may show `yellow` health
-because OpenSearch wants a replica shard but there is no second node. That is
-expected for this local stack.
+If the data view is missing, rerun the one-shot setup service:
+
+```sh
+docker compose up setup
+```
+
+The setup service sets `number_of_replicas` to `0` for `docker-logs-*`, so the
+log indices should be green in this single-node stack.
