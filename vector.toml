@@ -11,7 +11,11 @@ auto_partial_merge = true
 type = "remap"
 inputs = ["docker_logs"]
 source = '''
-.timestamp = now()
+parsed, parse_err = parse_json(.message)
+
+if parse_err == null && is_object(parsed) {
+  . = merge!(., parsed)
+}
 
 if exists(.container_name) {
   .container = .container_name
