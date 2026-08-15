@@ -77,6 +77,12 @@ container.keyword: "some-container-name"
 stream.keyword: "stderr"
 ```
 
+## Filtering Which Containers Are Logged
+
+This project's own containers (opensearch, dashboards, vector, setup) are
+always excluded, since their logs aren't useful noise in your
+`docker-logs-*` index. This is automatic and requires no configuration.
+
 ## Stop
 
 ```sh

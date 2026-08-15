@@ -32,9 +32,16 @@ if exists(.label."com.docker.compose.service") {
 del(.label)
 '''
 
+[transforms.exclude_own_project]
+type = "filter"
+inputs = ["enrich_docker_logs"]
+condition = '''
+!exists(.compose_project) || .compose_project != "${SELF_COMPOSE_PROJECT}"
+'''
+
 [sinks.opensearch]
 type = "elasticsearch"
-inputs = ["enrich_docker_logs"]
+inputs = ["exclude_own_project"]
 endpoints = ["http://opensearch:9200"]
 api_version = "v7"
 compression = "gzip"

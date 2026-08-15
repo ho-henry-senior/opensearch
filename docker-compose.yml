@@ -36,6 +36,11 @@ services:
     command:
       - --config
       - /etc/vector/vector.toml
+    environment:
+      SELF_COMPOSE_PROJECT: ${COMPOSE_PROJECT_NAME}
+      # Required for the ${SELF_COMPOSE_PROJECT} substitution above to be applied
+      # in vector.toml. Scoped to this container only; not a secret.
+      VECTOR_DANGEROUSLY_ALLOW_ENV_VAR_INTERPOLATION: "true"
     volumes:
       - ./vector.toml:/etc/vector/vector.toml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
